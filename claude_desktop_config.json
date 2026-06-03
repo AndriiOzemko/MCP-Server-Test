@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "notes": {
+      "command": "python",
+      "args": [
+        "d:\\Projects\\AI Engineering course\\MCP Server\\server.py"
+      ]
+    }
+  }
+}

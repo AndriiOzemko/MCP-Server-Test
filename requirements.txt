@@ -1,0 +1,5 @@
+# MCP Notes Server Dependencies
+# Python 3.12+ required
+
+# Official MCP Python SDK
+mcp>=1.0.0
