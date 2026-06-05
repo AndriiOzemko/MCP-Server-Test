@@ -12,6 +12,7 @@ from mcp.server.models import InitializationOptions
 import mcp.types as types
 from mcp.server import NotificationOptions, Server
 import mcp.server.stdio
+from mcp.server.lowlevel.helper_types import ReadResourceContents
 
 # Storage file for notes
 NOTES_FILE = Path("notes_storage.json")
@@ -85,9 +86,11 @@ async def handle_list_resources() -> list[types.Resource]:
 
 
 @server.read_resource()
-async def handle_read_resource(uri: str) -> str:
+async def handle_read_resource(uri: str) -> list[ReadResourceContents]:
     """Read a specific note resource."""
-    if uri == "notes://list":
+    uri_str = str(uri)
+
+    if uri_str == "notes://list":
         # Return list of all notes
         notes_list = []
         for note_id, note in notes_db.items():
@@ -99,25 +102,31 @@ async def handle_read_resource(uri: str) -> str:
                 "created_at": note["created_at"],
                 "updated_at": note["updated_at"]
             })
-        return json.dumps(notes_list, indent=2, ensure_ascii=False)
+        return [ReadResourceContents(
+            content=json.dumps(notes_list, indent=2, ensure_ascii=False),
+            mime_type="application/json"
+        )]
     
-    elif uri.startswith("note://"):
+    elif uri_str.startswith("note://"):
         # Extract note ID from URI
-        note_id = uri[7:]  # Remove "note://" prefix
+        note_id = uri_str[7:]  # Remove "note://" prefix
         
         if note_id in notes_db:
             note = notes_db[note_id]
-            return f"""Title: {note['title']}
+            return [ReadResourceContents(
+                content=f"""Title: {note['title']}
 Created: {note['created_at']}
 Updated: {note['updated_at']}
 Tags: {', '.join(note['tags'])}
 
-{note['content']}"""
+{note['content']}""",
+                mime_type="text/plain"
+            )]
         else:
             raise ValueError(f"Note with ID {note_id} not found")
     
     else:
-        raise ValueError(f"Unknown resource URI: {uri}")
+        raise ValueError(f"Unknown resource URI: {uri_str}")
 
 
 @server.list_tools()
